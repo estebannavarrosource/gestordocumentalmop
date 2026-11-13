@@ -11,6 +11,7 @@ import { buildV3Growth, buildV3Scene4, DOCS_LABELS, EXP_LABELS, Q_LABELS, U_LABE
 import { buildV3Scene5 } from '@/lib/sim/v3/scenes-c'
 import { buildV3Extra, V3_EXTRA_TITLES, V3_PROFILES, type V3ExtraId, type V3ExtraOpts } from '@/lib/sim/v3/scenes-d'
 import { nodeInfo } from '@/lib/sim/v3/info'
+import { AnalysisButton, AUTHOR, BrandMark } from './brand'
 import { STATUS_COLOR, STATUS_LABEL, TONE_COLOR } from './icons'
 import { Stage } from './stage'
 import { V3Compare, V3Growth, V3History, V3Steps } from './v3-overlays'
@@ -164,9 +165,14 @@ export function V3App() {
   return (
     <div ref={rootRef} className="flex h-dvh min-h-[600px] flex-col bg-mist text-navy">
       <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-0.5 border-b border-slate-line bg-white px-4 py-1.5">
-        <div className="flex min-w-0 items-baseline gap-3">
-          <h1 className="text-balance text-[15px] font-bold leading-tight md:text-base">Gestor Ministerial v3 · arquitectura propuesta</h1>
-          <p className="hidden truncate text-[12px] text-slate-ink md:block">{title}</p>
+        <div className="flex min-w-0 items-center gap-3">
+          <BrandMark height={34} />
+          <div className="min-w-0">
+            <h1 className="text-balance text-[15px] font-bold leading-tight md:text-base">Gestor Ministerial v3 · arquitectura propuesta</h1>
+            <p className="hidden truncate text-[12px] text-slate-ink md:block">
+              {title} · Análisis: {AUTHOR}
+            </p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
           <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] font-medium text-slate-ink" aria-label="Leyenda de estados">
@@ -185,6 +191,7 @@ export function V3App() {
               </li>
             ))}
           </ul>
+          <AnalysisButton />
           <Link href="/" className="rounded-lg px-2.5 py-1 text-[12px] font-semibold text-azure ring-1 ring-slate-line hover:bg-mist focus-visible:outline-2 focus-visible:outline-azure">
             Ver arquitectura actual
           </Link>

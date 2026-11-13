@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { AnalysisButton, AUTHOR, BrandMark } from './brand'
 import { AnimatePresence, motion } from 'motion/react'
 import { Pause, Play, RotateCcw, SkipForward } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -174,9 +175,14 @@ export function SimApp() {
   return (
     <div className="flex h-dvh min-h-[640px] flex-col bg-mist text-navy">
       <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-slate-line bg-white px-5 py-3">
-        <div className="min-w-0">
-          <h1 className="text-balance text-lg font-bold leading-tight md:text-xl">¿Qué ocurre dentro del expediente electrónico?</h1>
-          <p className="text-[13px] text-slate-ink">Simulación de la arquitectura propuesta del SME · {title}</p>
+        <div className="flex min-w-0 items-center gap-3">
+          <BrandMark height={42} />
+          <div className="min-w-0">
+            <h1 className="text-balance text-lg font-bold leading-tight md:text-xl">¿Qué ocurre dentro del expediente electrónico?</h1>
+            <p className="text-[13px] text-slate-ink">
+              Simulación de la arquitectura propuesta del SME · {title} · Análisis: {AUTHOR}
+            </p>
+          </div>
         </div>
         <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] font-medium text-slate-ink" aria-label="Leyenda de estados">
           {(
@@ -194,9 +200,12 @@ export function SimApp() {
             </li>
           ))}
         </ul>
-        <Link href="/gestor-v3" className="rounded-lg px-2.5 py-1 text-[12px] font-semibold text-azure ring-1 ring-slate-line hover:bg-mist focus-visible:outline-2 focus-visible:outline-azure">
-          Ver arquitectura propuesta (Gestor v3)
-        </Link>
+        <div className="flex items-center gap-2">
+          <AnalysisButton />
+          <Link href="/gestor-v3" className="rounded-lg px-2.5 py-1 text-[12px] font-semibold text-azure ring-1 ring-slate-line hover:bg-mist focus-visible:outline-2 focus-visible:outline-azure">
+            Ver arquitectura propuesta (Gestor v3)
+          </Link>
+        </div>
       </header>
 
       <nav className="flex flex-wrap items-center gap-1.5 border-b border-slate-line bg-white px-4 py-2" aria-label="Escenas">
