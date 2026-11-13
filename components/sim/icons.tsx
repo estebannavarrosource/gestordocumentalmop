@@ -43,6 +43,10 @@ import {
   Users,
   Workflow,
   Clock,
+  Monitor,
+  Cpu,
+  Search,
+  Gauge,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -91,6 +95,10 @@ export const ICONS: Record<string, LucideIcon> = {
   UserX,
   Users,
   Workflow,
+  Monitor,
+  Cpu,
+  Search,
+  Gauge,
 }
 
 export function SimIcon({ name, className, style }: { name?: string; className?: string; style?: React.CSSProperties }) {

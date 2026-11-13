@@ -34,6 +34,20 @@ interface Prepared {
   captions: Script['captions']
   cycleFinal: number
   cycleOps: number
+  bends: Map<string, number>
+  defaultBend: number
+}
+
+interface Pt {
+  x: number
+  y: number
+}
+
+interface Geom {
+  a: Pt
+  b: Pt
+  c?: Pt
+  forward: boolean
 }
 
 const cache = new WeakMap<Script, Prepared>()
@@ -55,12 +69,45 @@ function prepare(s: Script): Prepared {
     captions: [...s.captions].sort((a, b) => a.at - b.at),
     cycleFinal: s.ops.filter((o) => o.final).length,
     cycleOps: s.ops.length,
+    bends: new Map(s.links.filter((l) => l.bend !== undefined).map((l) => [keyOf(l.from, l.to), l.bend as number])),
+    defaultBend: s.curved ? 0.1 : 0,
   }
   cache.set(s, p)
   return p
 }
 
 const keyOf = (a: string, b: string) => (a < b ? `${a}~${b}` : `${b}~${a}`)
+
+/** Geometría de una conexión: recta o curva cuadrática simétrica respecto del sentido. */
+function geomOf(prep: Prepared, from: string, to: string): Geom | null {
+  const a = prep.centers.get(from)
+  const b = prep.centers.get(to)
+  if (!a || !b) return null
+  const bend = prep.bends.get(keyOf(from, to)) ?? prep.defaultBend
+  const forward = from <= to
+  let c: Pt | undefined
+  if (bend) {
+    const p0 = forward ? a : b
+    const p2 = forward ? b : a
+    c = {
+      x: (p0.x + p2.x) / 2 - (p2.y - p0.y) * bend,
+      y: (p0.y + p2.y) / 2 + (p2.x - p0.x) * bend,
+    }
+  }
+  return { a, b, c, forward }
+}
+
+function pointAt(g: Geom, s: number): Pt {
+  const p0 = g.forward ? g.a : g.b
+  const p2 = g.forward ? g.b : g.a
+  const u = g.forward ? s : 1 - s
+  if (!g.c) return { x: lerp(p0.x, p2.x, u), y: lerp(p0.y, p2.y, u) }
+  const m = 1 - u
+  return {
+    x: m * m * p0.x + 2 * m * u * g.c.x + u * u * p2.x,
+    y: m * m * p0.y + 2 * m * u * g.c.y + u * u * p2.y,
+  }
+}
 
 const PRIORITY: Record<LineState, number> = { idle: 0, ok: 1, run: 2, wait: 3, err: 4 }
 
@@ -122,9 +169,9 @@ export function frameAt(script: Script, t: number): Frame {
   const lineMap = new Map<string, LineFrame>()
   for (const l of script.links) {
     if (l.at !== undefined && tl < l.at) continue
-    const a = prep.centers.get(l.from)
-    const b = prep.centers.get(l.to)
-    if (!a || !b) continue
+    const g = geomOf(prep, l.from, l.to)
+    if (!g) continue
+    const { a, b } = g
     const k = keyOf(l.from, l.to)
     lineMap.set(k, {
       key: k,
@@ -134,6 +181,8 @@ export function frameAt(script: Script, t: number): Frame {
       y1: a.y,
       x2: b.x,
       y2: b.y,
+      cx: g.c?.x,
+      cy: g.c?.y,
       state: 'idle',
       independent: !!l.independent,
       faint: !!l.faint,
@@ -154,9 +203,9 @@ export function frameAt(script: Script, t: number): Frame {
     const o = ops[i]
     if (o.start > tl) continue
     calls++
-    const a = prep.centers.get(o.from)
-    const b = prep.centers.get(o.to)
-    if (!a || !b) continue
+    const g = geomOf(prep, o.from, o.to)
+    if (!g) continue
+    const { a, b } = g
     const hold = o.hold ?? 0
     const arrive = o.start + o.dur
     const end = arrive + hold
@@ -183,6 +232,8 @@ export function frameAt(script: Script, t: number): Frame {
         y1: a.y,
         x2: b.x,
         y2: b.y,
+        cx: g.c?.x,
+        cy: g.c?.y,
         state: 'idle',
         independent: false,
         faint: false,
@@ -200,10 +251,11 @@ export function frameAt(script: Script, t: number): Frame {
       const pe = ease(clamp(p))
       let opacity = 1
       if (o.outcome === 'lost') opacity = p < 0.55 ? 1 : clamp(1 - (p - 0.55) / 0.2)
+      const pt = pointAt(g, pe)
       packets.push({
         key: `p${i}`,
-        x: lerp(a.x, b.x, pe),
-        y: lerp(a.y, b.y, pe),
+        x: pt.x,
+        y: pt.y,
         outcome: o.outcome,
         label: o.label,
         opacity,
@@ -212,10 +264,11 @@ export function frameAt(script: Script, t: number): Frame {
     } else if (tl < end) {
       state = 'wait'
       pendingNow++
+      const mid = pointAt(g, 0.5)
       waits.push({
         key: `w${i}`,
-        x: (a.x + b.x) / 2,
-        y: (a.y + b.y) / 2,
+        x: mid.x,
+        y: mid.y,
         label: o.holdLabel,
         tone: o.outcome === 'error' ? 'error' : 'pending',
       })
