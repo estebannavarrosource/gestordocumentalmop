@@ -36,9 +36,12 @@ interface Props {
   showFailures: boolean
   showTicker?: boolean
   overlay?: React.ReactNode
+  zoom?: number
+  selected?: string | null
+  onSelect?: (id: string | null) => void
 }
 
-export function Stage({ script, frame, amb, showFailures, showTicker = true, overlay }: Props) {
+export function Stage({ script, frame, amb, showFailures, showTicker = true, overlay, zoom = 1, selected, onSelect }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 1280, h: 600 })
   const { w: W, h: H } = script.stage
@@ -52,7 +55,7 @@ export function Stage({ script, frame, amb, showFailures, showTicker = true, ove
     return () => ro.disconnect()
   }, [])
 
-  const scale = Math.max(0.55, Math.min(size.w / W, size.h / H))
+  const scale = Math.max(0.55, Math.min(size.w / W, size.h / H)) * zoom
   const groups = script.nodes.filter((n) => n.kind === 'group')
   const others = script.nodes.filter((n) => n.kind !== 'group')
   const bp = script.bannerPos ?? { x: 40, y: 498, w: 1050 }
@@ -73,12 +76,24 @@ export function Stage({ script, frame, amb, showFailures, showTicker = true, ove
         pulseAlpha={Math.round(nf.pulseAlpha * 10) / 10}
         volume={frame.volume}
         showFailures={showFailures}
+        selected={selected === def.id}
       />
     )
   }
 
   return (
-    <div ref={hostRef} className="relative flex h-full w-full overflow-auto sim-grid">
+    <div
+      ref={hostRef}
+      className="relative flex h-full w-full overflow-auto sim-grid"
+      onClick={
+        onSelect
+          ? (e) => {
+              const el = (e.target as HTMLElement).closest('[data-node]')
+              onSelect(el ? el.getAttribute('data-node') : null)
+            }
+          : undefined
+      }
+    >
       <div className="relative m-auto shrink-0" style={{ width: W * scale, height: H * scale }}>
         <div className="absolute left-0 top-0 origin-top-left" style={{ width: W, height: H, transform: `scale(${scale})` }}>
           {groups.map(renderNode)}
@@ -92,21 +107,19 @@ export function Stage({ script, frame, amb, showFailures, showTicker = true, ove
               const dash = failing && idle ? '10 8' : st.dash
               const width = failing && idle ? 2.6 : st.w
               const op = (idle && l.faint && !failing ? 0.55 : 1) * l.opacity
-              return (
-                <line
-                  key={l.key}
-                  x1={l.x1}
-                  y1={l.y1}
-                  x2={l.x2}
-                  y2={l.y2}
-                  stroke={stroke}
-                  strokeWidth={width}
-                  strokeDasharray={dash}
-                  strokeDashoffset={dash ? -(frame.t / 28) % 100 : 0}
-                  strokeLinecap="round"
-                  opacity={op}
-                />
-              )
+              const common = {
+                stroke,
+                strokeWidth: width,
+                strokeDasharray: dash,
+                strokeDashoffset: dash ? -(frame.t / 28) % 100 : 0,
+                strokeLinecap: 'round' as const,
+                opacity: op,
+              }
+              if (l.cx !== undefined && l.cy !== undefined) {
+                return <path key={l.key} d={`M${l.x1} ${l.y1} Q${l.cx} ${l.cy} ${l.x2} ${l.y2}`} fill="none" {...common} />
+              }
+              return <line key={l.key} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} {...common} />
+              
             })}
           </svg>
 

@@ -27,6 +27,8 @@ export interface NodeDef {
   small?: boolean
   /** estilo de énfasis */
   emphasis?: 'navy' | 'azure'
+  /** variante compacta (tipografía e iconos reducidos) */
+  compact?: boolean
 }
 
 export interface LinkDef {
@@ -36,6 +38,8 @@ export interface LinkDef {
   independent?: boolean
   label?: string
   faint?: boolean
+  /** curvatura de la conexión (fracción de la distancia); sustituye la curvatura por defecto */
+  bend?: number
 }
 
 export interface Op {
@@ -52,6 +56,8 @@ export interface Op {
   coord?: boolean
   final?: boolean
   big?: boolean
+  /** etiqueta de conteo para indicadores derivados */
+  tag?: string
 }
 
 export interface NodeEvent {
@@ -103,6 +109,8 @@ export interface Script {
   activity: TimelineEvent[]
   overlay?: 'steps' | 'growth' | 'history' | 'compare' | 'none'
   meta?: Record<string, number | string>
+  /** conexiones curvas por defecto */
+  curved?: boolean
 }
 
 export interface NodeFrame {
@@ -141,6 +149,9 @@ export interface LineFrame {
   faint: boolean
   opacity: number
   ephemeral: boolean
+  /** punto de control de la curva cuadrática (si existe) */
+  cx?: number
+  cy?: number
 }
 
 export interface WaitFrame {

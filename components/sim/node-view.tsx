@@ -18,6 +18,7 @@ interface Props {
   pulseAlpha: number
   volume: number
   showFailures: boolean
+  selected?: boolean
 }
 
 function hexA(hex: string, a: number) {
@@ -25,7 +26,7 @@ function hexA(hex: string, a: number) {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`
 }
 
-function NodeViewImpl({ def, status, badge, x, y, opacity, scale, pulse, pulseAlpha, volume, showFailures }: Props) {
+function NodeViewImpl({ def, status, badge, x, y, opacity, scale, pulse, pulseAlpha, volume, showFailures, selected }: Props) {
   if (opacity <= 0.01) return null
   const color = STATUS_COLOR[status]
   const navy = def.emphasis === 'navy'
@@ -42,6 +43,7 @@ function NodeViewImpl({ def, status, badge, x, y, opacity, scale, pulse, pulseAl
     for (let i = 1; i <= volume; i++) glow.push(`${i * 3}px ${i * 3}px 0 -1px #ffffff, ${i * 3}px ${i * 3}px 0 0 #CBD5E1`)
   }
   if (!navy && def.kind !== 'group') glow.push('0 2px 6px rgba(16,42,76,0.08)')
+  if (selected) glow.push('0 0 0 3px #1672B8, 0 0 0 6px rgba(22,114,184,0.25)')
 
   const style: React.CSSProperties = {
     left: x,
@@ -56,18 +58,20 @@ function NodeViewImpl({ def, status, badge, x, y, opacity, scale, pulse, pulseAl
   }
 
   if (def.kind === 'group') {
+    const cg = !!def.compact
     return (
       <div
-        className="absolute rounded-2xl border-2 bg-white/70 backdrop-blur-[1px]"
+        data-node={def.id}
+        className={`absolute border-2 bg-white/70 backdrop-blur-[1px] ${cg ? 'rounded-xl' : 'rounded-2xl'}`}
         style={{ ...style, borderStyle: failureRing || def.dashed ? 'dashed' : 'solid', borderColor: failureRing ? RED : status === 'idle' ? '#B8C6D8' : color }}
       >
-        <div className="flex items-center gap-2.5 px-4 pt-3">
-          <span className="grid size-7 place-items-center rounded-md bg-navy text-white">
-            <SimIcon name={def.icon} className="size-4" />
+        <div className={cg ? 'flex items-center gap-2 px-2.5 pt-2' : 'flex items-center gap-2.5 px-4 pt-3'}>
+          <span className={`grid shrink-0 place-items-center rounded-md bg-navy text-white ${cg ? 'size-[22px]' : 'size-7'}`}>
+            <SimIcon name={def.icon} className={cg ? 'size-3.5' : 'size-4'} />
           </span>
           <div className="min-w-0 leading-tight">
-            <div className="truncate text-[15px] font-bold text-navy">{def.label}</div>
-            {def.sub && <div className="truncate text-[11px] text-slate-ink">{def.sub}</div>}
+            <div className={cg ? 'text-[12.5px] font-bold leading-[1.1] text-navy' : 'truncate text-[15px] font-bold text-navy'}>{def.label}</div>
+            {def.sub && <div className={`truncate text-slate-ink ${cg ? 'text-[10px]' : 'text-[11px]'}`}>{def.sub}</div>}
           </div>
         </div>
         {failureRing && (
@@ -86,13 +90,14 @@ function NodeViewImpl({ def, status, badge, x, y, opacity, scale, pulse, pulseAl
 
   return (
     <div
+      data-node={def.id}
       className="absolute flex flex-col justify-center rounded-xl border-2"
       style={{
         ...style,
         borderStyle: def.dashed || failureRing ? 'dashed' : 'solid',
         background: navy ? NAVY : '#FFFFFF',
         color: textColor,
-        padding: chip ? (def.small ? '4px 6px' : '6px 10px') : '10px 14px',
+        padding: chip ? (def.small ? '4px 6px' : def.compact ? '3px 7px' : '6px 10px') : '10px 14px',
       }}
     >
       {def.parts ? (
@@ -106,7 +111,7 @@ function NodeViewImpl({ def, status, badge, x, y, opacity, scale, pulse, pulseAl
               </div>
             </div>
           </div>
-          <div className="mt-2.5 grid grid-cols-3 gap-1.5">
+          <div className={`mt-2.5 grid gap-1.5 ${def.compact ? 'grid-cols-2' : 'grid-cols-3'}`}>
             {def.parts.map((p) => (
               <span key={p} className="truncate rounded-md bg-white/12 px-1.5 py-1 text-center text-[10.5px] font-medium ring-1 ring-white/25">
                 {p}
@@ -115,24 +120,24 @@ function NodeViewImpl({ def, status, badge, x, y, opacity, scale, pulse, pulseAl
           </div>
         </>
       ) : (
-        <div className="flex items-center gap-2">
+        <div className={`flex items-center ${def.compact ? 'gap-1.5' : 'gap-2'}`}>
           {!def.small && (
             <span
               className="grid shrink-0 place-items-center rounded-md"
               style={{
-                width: chip ? 28 : 36,
-                height: chip ? 28 : 36,
+                width: chip ? (def.compact ? 22 : 28) : 36,
+                height: chip ? (def.compact ? 22 : 28) : 36,
                 background: navy ? 'rgba(255,255,255,0.14)' : hexA(color, 0.14),
                 color: navy ? '#FFFFFF' : color,
               }}
             >
-              <SimIcon name={def.icon} className={chip ? 'size-4' : 'size-5'} />
+              <SimIcon name={def.icon} className={chip ? (def.compact ? 'size-3.5' : 'size-4') : 'size-5'} />
             </span>
           )}
           <div className="min-w-0 flex-1 leading-tight">
             <div
               className="font-semibold [overflow-wrap:anywhere]"
-              style={{ fontSize: chip ? (def.small ? 11 : 12) : 15, lineHeight: 1.15 }}
+              style={{ fontSize: chip ? (def.small ? 11 : def.compact ? 11.5 : 12) : 15, lineHeight: 1.15 }}
             >
               {def.label}
             </div>
@@ -144,7 +149,7 @@ function NodeViewImpl({ def, status, badge, x, y, opacity, scale, pulse, pulseAl
           </div>
         </div>
       )}
-      {def.dense && (
+      {def.dense && !def.compact && (
         <div className="mt-1.5 flex flex-wrap gap-[2px]" style={{ maxHeight: 12, overflow: 'hidden' }}>
           {Array.from({ length: DOTS[volume] }).map((_, i) => (
             <span key={i} className="size-[4px] rounded-[1px]" style={{ background: hexA(color, 0.55) }} />

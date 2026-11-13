@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { AnimatePresence, motion } from 'motion/react'
 import { Pause, Play, RotateCcw, SkipForward } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -193,6 +194,9 @@ export function SimApp() {
             </li>
           ))}
         </ul>
+        <Link href="/gestor-v3" className="rounded-lg px-2.5 py-1 text-[12px] font-semibold text-azure ring-1 ring-slate-line hover:bg-mist focus-visible:outline-2 focus-visible:outline-azure">
+          Ver arquitectura propuesta (Gestor v3)
+        </Link>
       </header>
 
       <nav className="flex flex-wrap items-center gap-1.5 border-b border-slate-line bg-white px-4 py-2" aria-label="Escenas">
