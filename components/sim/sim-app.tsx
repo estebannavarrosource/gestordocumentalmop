@@ -180,7 +180,7 @@ export function SimApp() {
           <div className="min-w-0">
             <h1 className="text-balance text-lg font-bold leading-tight md:text-xl">¿Qué ocurre dentro del expediente electrónico?</h1>
             <p className="text-[13px] text-slate-ink">
-              Simulación de la arquitectura propuesta del SME · {title} · Análisis: {AUTHOR}
+              Simulación de la arquitectura propuesta del SDIT · {title} · Análisis: {AUTHOR}
             </p>
           </div>
         </div>

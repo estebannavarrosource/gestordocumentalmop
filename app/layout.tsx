@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const mono = Geist_Mono({ subsets: ['latin'], variable: '--font-mono-sim' })
 
 export const metadata: Metadata = {
-  title: '¿Qué ocurre dentro del expediente electrónico? | Simulación SME',
+  title: '¿Qué ocurre dentro del expediente electrónico? | Simulación SDIT',
   description:
     'Simulación animada de la arquitectura propuesta para el Sistema Ministerial de Expedientes Electrónicos (SME) del MOP: dependencias, estados intermedios y coordinación entre sistemas independientes.',
   generator: 'v0.app',
